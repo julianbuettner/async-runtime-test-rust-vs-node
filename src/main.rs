@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use futures::TryStreamExt;
 use std::{net::SocketAddr, time::Duration};
+use tokio::runtime;
 
 use axum::{
     extract::{FromRef, FromRequestParts},
@@ -47,8 +48,7 @@ async fn list_users(
     (StatusCode::OK, Json(users))
 }
 
-#[tokio::main]
-async fn main() {
+async fn async_main() {
     let db_connection_str = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://async:async@localhost".to_string());
     let pool = PgPoolOptions::new()
@@ -69,6 +69,15 @@ async fn main() {
         .unwrap();
 
     todo!()
+}
+
+fn main() {
+    let rt = runtime::Builder::new_current_thread()
+        .enable_time()
+        .enable_io()
+        .build()
+        .unwrap();
+    rt.block_on(async_main())
 }
 
 struct DatabaseConnection(sqlx::pool::PoolConnection<sqlx::Postgres>);
